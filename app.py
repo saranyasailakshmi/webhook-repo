@@ -36,24 +36,30 @@ def get_events():
     return jsonify(events)
 
 def format_event(doc):
-    evt = doc['event']
-    data = doc['data']
+    evt = doc.get('event')
+    data = doc.get('data', {})
     timestamp = doc['timestamp'].strftime('%d %B %Y - %I:%M %p UTC')
 
     if evt == "push":
-        author = data['pusher']['name']
-        branch = data['ref'].split('/')[-1]
+        author = data.get('pusher', {}).get('name', 'Unknown')
+        ref = data.get('ref', 'refs/heads/main')
+        branch = ref.split('/')[-1] if ref else 'unknown'
         return f'"{author}" pushed to "{branch}" on {timestamp}'
-    elif evt == "pull_request":
-        author = data['pull_request']['user']['login']
-        from_branch = data['pull_request']['head']['ref']
-        to_branch = data['pull_request']['base']['ref']
-        return f'"{author}" submitted a pull request from "{from_branch}" to "{to_branch}" on {timestamp}'
-    elif evt == "pull_request" and data['action'] == "closed" and data['pull_request']['merged']:
-        author = data['pull_request']['user']['login']
-        from_branch = data['pull_request']['head']['ref']
-        to_branch = data['pull_request']['base']['ref']
+
+    if evt == "pull_request" and data.get('action') == "closed" and data.get('pull_request', {}).get('merged'):
+        pr = data.get('pull_request', {})
+        author = pr.get('user', {}).get('login', 'Unknown')
+        from_branch = pr.get('head', {}).get('ref', 'unknown')
+        to_branch = pr.get('base', {}).get('ref', 'unknown')
         return f'"{author}" merged branch "{from_branch}" to "{to_branch}" on {timestamp}'
+
+    if evt == "pull_request":
+        pr = data.get('pull_request', {})
+        author = pr.get('user', {}).get('login', 'Unknown')
+        from_branch = pr.get('head', {}).get('ref', 'unknown')
+        to_branch = pr.get('base', {}).get('ref', 'unknown')
+        return f'"{author}" submitted a pull request from "{from_branch}" to "{to_branch}" on {timestamp}'
+
     return "Unknown event"
 
 if __name__ == '__main__':
