@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub Events Dashboard</title>
+    <script>
+        async function fetchEvents() {
+            const response = await fetch('/events');
+            const data = await response.json();
+            const container = document.getElementById("events");
+            container.innerHTML = "";
+            data.forEach(event => {
+                const p = document.createElement("p");
+                p.textContent = event;
+                container.appendChild(p);
+            });
+        }
+
+        setInterval(fetchEvents, 15000);  // Poll every 15 sec
+        window.onload = fetchEvents;
+    </script>
+</head>
+<body>
+    <h2>Latest GitHub Events</h2>
+    <div id="events"></div>
+</body>
+</html>
